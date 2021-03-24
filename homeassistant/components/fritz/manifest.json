@@ -10,7 +10,6 @@
   "dependencies": [],
   "requirements": [
     "fritzconnection==1.4.0",
-    "fritzprofiles==0.5.2",
     "xmltodict==0.12.0"
   ],
   "config_flow": true,
