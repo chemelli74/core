@@ -619,6 +619,9 @@ freesms==0.1.2
 # homeassistant.components.fritzbox_netmonitor
 fritzconnection==1.4.0
 
+# homeassistant.components.fritz
+fritzprofiles==0.5.2
+
 # homeassistant.components.google_translate
 gTTS==2.2.2
 
@@ -2335,6 +2338,7 @@ xboxapi==2.0.1
 xknx==0.17.3
 
 # homeassistant.components.bluesound
+# homeassistant.components.fritz
 # homeassistant.components.rest
 # homeassistant.components.startca
 # homeassistant.components.ted5000

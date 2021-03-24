@@ -1,7 +1,22 @@
 {
   "domain": "fritz",
-  "name": "AVM FRITZ!Box",
-  "documentation": "https://www.home-assistant.io/integrations/fritz",
-  "requirements": ["fritzconnection==1.4.0"],
-  "codeowners": []
+  "name": "AVM FRITZ!Box Tools",
+  "documentation": "https://www.home-assistant.io/integrations/fritz/",
+  "codeowners": [
+    "@mammuth",
+    "@AaronDavidSchneider",
+    "@chemelli74"
+  ],
+  "dependencies": [],
+  "requirements": [
+    "fritzconnection==1.4.0",
+    "fritzprofiles==0.5.2",
+    "xmltodict==0.12.0"
+  ],
+  "config_flow": true,
+  "ssdp": [
+    {
+      "st": "urn:schemas-upnp-org:device:fritzbox:1"
+    }
+  ]
 }
