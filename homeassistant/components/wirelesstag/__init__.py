@@ -5,7 +5,8 @@ from requests.exceptions import ConnectTimeout, HTTPError
 import voluptuous as vol
 from wirelesstagpy import NotificationConfig as NC, WirelessTags, WirelessTagsException
 
-from homeassistant import util
+from homeassistant.components.network import async_get_source_ip
+from homeassistant.components.network.const import PUBLIC_TARGET_IP
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     ATTR_VOLTAGE,
@@ -131,7 +132,9 @@ class WirelessTagPlatform:
     def local_base_url(self):
         """Define base url of hass in local network."""
         if self._local_base_url is None:
-            self._local_base_url = f"http://{util.get_local_ip()}"
+            self._local_base_url = (
+                f"http://{async_get_source_ip(self.hass, target_ip=PUBLIC_TARGET_IP)}"
+            )
 
             port = self.hass.config.api.port
             if port is not None:
