@@ -132,10 +132,7 @@ class WirelessTagPlatform:
     def local_base_url(self):
         """Define base url of hass in local network."""
         if self._local_base_url is None:
-            self._local_base_url = (
-                f"http://{async_get_source_ip(self.hass, target_ip=PUBLIC_TARGET_IP)}"
-            )
-
+            self._local_base_url = f"http://{self.hass.loop.run_until_complete(async_get_source_ip(self.hass, target_ip=PUBLIC_TARGET_IP))}"
             port = self.hass.config.api.port
             if port is not None:
                 self._local_base_url += f":{port}"
