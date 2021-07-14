@@ -18,8 +18,6 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.humidifier import DOMAIN as HUMIDIFIER_DOMAIN
-from homeassistant.components.network import async_get_source_ip
-from homeassistant.components.network.const import PUBLIC_TARGET_IP
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
@@ -42,6 +40,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import BASE_FILTER_SCHEMA, FILTER_SCHEMA
 from homeassistant.helpers.reload import async_integration_yaml_config
 from homeassistant.loader import IntegrationNotFound, async_get_integration
+from homeassistant.util import get_local_ip
 
 from . import (  # noqa: F401
     type_cameras,
@@ -459,7 +458,7 @@ class HomeKit:
 
     def setup(self, async_zeroconf_instance):
         """Set up bridge and accessory driver."""
-        ip_addr = self._ip_address or async_get_source_ip(self.hass, PUBLIC_TARGET_IP)
+        ip_addr = self._ip_address or get_local_ip()
         persist_file = get_persist_fullpath_for_entry_id(self.hass, self._entry_id)
 
         self.driver = HomeDriver(
