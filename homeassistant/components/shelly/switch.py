@@ -8,12 +8,11 @@ from aioshelly.block_device import Block
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.entity_registry import RegistryEntry
 
-from . import BlockDeviceWrapper, RpcDeviceWrapper
+from . import BlockDeviceWrapper
 from .const import CONF_SLEEP_PERIOD
 from .entity import (
     BlockEntityDescription,
@@ -23,11 +22,7 @@ from .entity import (
     async_setup_entry_attribute_entities,
     async_setup_entry_rpc,
 )
-from .utils import (
-    get_device_entry_gen,
-    is_block_exclude_from_relay,
-    is_rpc_channel_type_light,
-)
+from .utils import get_device_entry_gen
 
 
 @dataclass
@@ -41,9 +36,9 @@ class RpcSwitchDescription(RpcEntityDescription, SwitchEntityDescription):
 
 
 SWITCHES: Final = {
-    ("relay", "output"): BlockSwitchDescription(
-        key="relay|output",
-        removal_condition=is_block_exclude_from_relay,
+    ("relay", "input"): BlockSwitchDescription(
+        key="relay|input",
+        name="Switch",
     ),
 }
 
@@ -51,8 +46,8 @@ RPC_SWITCHES: Final = {
     "switch": RpcSwitchDescription(
         key="switch",
         sub_key="output",
-        removal_condition=is_rpc_channel_type_light,
-    )
+        name="Switch",
+    ),
 }
 
 
@@ -72,7 +67,6 @@ async def async_setup_entry(
 ) -> None:
     """Set up switches for device."""
     if get_device_entry_gen(config_entry) == 2:
-
         return await async_setup_entry_rpc(
             hass, config_entry, async_add_entities, RPC_SWITCHES, RpcRelaySwitch
         )
@@ -111,7 +105,7 @@ class BlockRelaySwitch(ShellyBlockAttributeEntity, SwitchEntity):
         description: BlockSwitchDescription,
     ) -> None:
         """Initialize sensor."""
-        super().__init__(wrapper, block, attribute, description, Platform.SWITCH)
+        super().__init__(wrapper, block, attribute, description)
 
     @property
     def is_on(self) -> bool:
@@ -133,16 +127,6 @@ class RpcRelaySwitch(ShellyRpcAttributeEntity, SwitchEntity):
     """Entity that controls a relay on RPC based Shelly devices."""
 
     entity_description: RpcSwitchDescription
-
-    def __init__(
-        self,
-        wrapper: RpcDeviceWrapper,
-        key: str,
-        attribute: str,
-        description: RpcEntityDescription,
-    ) -> None:
-        """Initialize sensor."""
-        super().__init__(wrapper, key, attribute, description, Platform.SWITCH)
 
     @property
     def is_on(self) -> bool:
