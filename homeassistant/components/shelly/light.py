@@ -85,9 +85,7 @@ def async_setup_block_entry(
         if block.type == "light":
             blocks.append(block)
         elif block.type == "relay":
-            if not is_block_channel_type_light(
-                wrapper.device.settings, int(block.channel)
-            ):
+            if not is_block_channel_type_light(wrapper.device.settings, block.channel):
                 continue
 
             blocks.append(block)
@@ -113,7 +111,7 @@ def async_setup_rpc_entry(
 
     switch_ids = []
     for id_ in switch_key_ids:
-        if not is_rpc_channel_type_light(wrapper.device.config, id_):
+        if not is_rpc_channel_type_light(wrapper.device.config, str(id_)):
             continue
 
         switch_ids.append(id_)
