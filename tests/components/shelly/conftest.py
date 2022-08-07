@@ -3,13 +3,18 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
-from homeassistant.components.shelly import BlockDeviceWrapper, RpcDeviceWrapper
+from homeassistant.components.shelly import (
+    BlockDeviceWrapper,
+    RpcDeviceWrapper,
+    RpcPollingWrapper,
+)
 from homeassistant.components.shelly.const import (
     BLOCK,
     DATA_CONFIG_ENTRY,
     DOMAIN,
     EVENT_SHELLY_CLICK,
     RPC,
+    RPC_POLL,
 )
 from homeassistant.setup import async_setup_component
 
@@ -89,7 +94,7 @@ MOCK_STATUS_RPC = {
     "sys": {
         "available_updates": {
             "beta": {"version": "some_beta_version"},
-            "stable": {"version": "some_beta_version"},
+            "stable": {"version": "some_stable_version"},
         }
     },
 }
@@ -188,5 +193,9 @@ async def rpc_wrapper(hass):
     ] = RpcDeviceWrapper(hass, config_entry, device)
 
     wrapper.async_setup()
+
+    hass.data[DOMAIN][DATA_CONFIG_ENTRY][config_entry.entry_id][
+        RPC_POLL
+    ] = RpcPollingWrapper(hass, config_entry, device)
 
     return wrapper
