@@ -119,13 +119,13 @@ SENSOR_TYPES: Final = (
         key="phone_num1",
         translation_key="phone_num1",
         icon="mdi:phone",
-        is_suitable=lambda info: info["phone_unavailable1"] == "0",
+        is_suitable=lambda info: info["phone_num1"] != "",
     ),
     VodafoneStationEntityDescription(
         key="phone_num2",
         translation_key="phone_num2",
         icon="mdi:phone",
-        is_suitable=lambda info: info["phone_unavailable2"] == "0",
+        is_suitable=lambda info: info["phone_num2"] != "",
     ),
     VodafoneStationEntityDescription(
         key="sys_uptime",
