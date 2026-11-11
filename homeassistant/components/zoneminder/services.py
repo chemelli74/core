@@ -1,11 +1,12 @@
 """Support for ZoneMinder."""
 
+from enum import StrEnum
 import logging
 from typing import TYPE_CHECKING
 
 import probatio
 
-from homeassistant.const import ATTR_ID, ATTR_NAME, CONF_HOST
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
@@ -17,16 +18,32 @@ if TYPE_CHECKING:
 
 _LOGGER = logging.getLogger(__name__)
 
-SERVICE_SET_RUN_STATE = "set_run_state"
+
+class ZoneMinderService(StrEnum):
+    """Store keys for ZoneMinder services."""
+
+    SET_RUN_STATE = "set_run_state"
+
+
+class ZoneMinderServiceArgument(StrEnum):
+    """Store keys for ZoneMinder service arguments."""
+
+    ID = "id"
+    NAME = "name"
+
+
 SET_RUN_STATE_SCHEMA = probatio.Schema(
-    {probatio.Required(ATTR_ID): cv.string, probatio.Required(ATTR_NAME): cv.string}
+    {
+        probatio.Required(ZoneMinderServiceArgument.ID): cv.string,
+        probatio.Required(ZoneMinderServiceArgument.NAME): cv.string,
+    }
 )
 
 
 async def _async_set_active_state(call: ServiceCall) -> None:
     """Set the ZoneMinder run state to the given state name."""
-    zm_id = call.data[ATTR_ID]
-    state_name = call.data[ATTR_NAME]
+    zm_id = call.data[ZoneMinderServiceArgument.ID]
+    state_name = call.data[ZoneMinderServiceArgument.NAME]
     entries: list[ZoneMinderConfigEntry] = (
         call.hass.config_entries.async_loaded_entries(DOMAIN)
     )
@@ -53,7 +70,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     hass.services.async_register(
         DOMAIN,
-        SERVICE_SET_RUN_STATE,
+        ZoneMinderService.SET_RUN_STATE,
         _async_set_active_state,
         schema=SET_RUN_STATE_SCHEMA,
     )

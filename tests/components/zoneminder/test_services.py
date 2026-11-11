@@ -7,7 +7,8 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.zoneminder.const import DOMAIN
-from homeassistant.const import ATTR_ID, ATTR_NAME, CONF_HOST, Platform
+from homeassistant.components.zoneminder.services import ZoneMinderServiceArgument
+from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 
@@ -33,7 +34,10 @@ async def test_set_run_state(
     await hass.services.async_call(
         DOMAIN,
         "set_run_state",
-        {ATTR_ID: MOCK_HOST, ATTR_NAME: "Away"},
+        {
+            ZoneMinderServiceArgument.ID: MOCK_HOST,
+            ZoneMinderServiceArgument.NAME: "Away",
+        },
         blocking=True,
     )
 
@@ -63,7 +67,10 @@ async def test_set_run_state_multi_server(hass: HomeAssistant) -> None:
     await hass.services.async_call(
         DOMAIN,
         "set_run_state",
-        {ATTR_ID: MOCK_HOST_2, ATTR_NAME: "Home"},
+        {
+            ZoneMinderServiceArgument.ID: MOCK_HOST_2,
+            ZoneMinderServiceArgument.NAME: "Home",
+        },
         blocking=True,
     )
 
@@ -80,7 +87,12 @@ async def test_set_run_state_missing_fields(
 
     with pytest.raises(probatio.MultipleInvalid):
         await hass.services.async_call(
-            DOMAIN, "set_run_state", {ATTR_ID: MOCK_HOST}, blocking=True
+            DOMAIN,
+            "set_run_state",
+            {
+                ZoneMinderServiceArgument.ID: MOCK_HOST
+            },  # Missing ZoneMinderServiceArgument.NAME
+            blocking=True,
         )
 
 
@@ -95,7 +107,10 @@ async def test_set_run_state_invalid_host(
         await hass.services.async_call(
             DOMAIN,
             "set_run_state",
-            {ATTR_ID: "invalid.host", ATTR_NAME: "Away"},
+            {
+                ZoneMinderServiceArgument.ID: "invalid.host",
+                ZoneMinderServiceArgument.NAME: "Away",
+            },
             blocking=True,
         )
 
@@ -115,7 +130,10 @@ async def test_set_run_state_failure_logged(
     await hass.services.async_call(
         DOMAIN,
         "set_run_state",
-        {ATTR_ID: MOCK_HOST, ATTR_NAME: "Away"},
+        {
+            ZoneMinderServiceArgument.ID: MOCK_HOST,
+            ZoneMinderServiceArgument.NAME: "Away",
+        },
         blocking=True,
     )
 
