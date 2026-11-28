@@ -128,7 +128,9 @@ DEVICEINFO_WEBSOCKET_SSL = {
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 
-@pytest.mark.usefixtures("remote_legacy", "rest_api_failing")
+@pytest.mark.usefixtures(
+    "remote_legacy", "rest_api_failing", "remote_encrypted_websocket_failing"
+)
 async def test_user_legacy(hass: HomeAssistant) -> None:
     """Test starting a flow by user."""
     # show form
@@ -166,7 +168,7 @@ async def test_user_legacy(hass: HomeAssistant) -> None:
     assert result["result"].unique_id is None
 
 
-@pytest.mark.usefixtures("rest_api_failing")
+@pytest.mark.usefixtures("rest_api_failing", "remote_encrypted_websocket_failing")
 async def test_user_legacy_does_not_ok_first_time(hass: HomeAssistant) -> None:
     """Test starting a flow by user."""
     # show form
@@ -284,6 +286,45 @@ async def test_user_encrypted_websocket(
     assert result4["data"][CONF_TOKEN] == "037739871315caef138547b03e348b72"
     assert result4["data"][CONF_SESSION_ID] == "1"
     assert result4["result"].unique_id == "223da676-497a-4e06-9507-5e27ec4f0fb3"
+
+
+@pytest.mark.usefixtures("remote_encrypted_websocket", "rest_api_failing")
+async def test_user_encrypted_websocket_without_rest_api(
+    hass: HomeAssistant,
+) -> None:
+    """Test an H/J model without the REST api pairs via the encrypted port."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.samsungtv.config_flow.SamsungTVEncryptedWSAsyncAuthenticator",
+        autospec=True,
+    ) as authenticator_mock:
+        authenticator_mock.return_value.try_pin.return_value = (
+            "037739871315caef138547b03e348b72"
+        )
+        authenticator_mock.return_value.get_session_id_and_close.return_value = "1"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=MOCK_USER_DATA
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "encrypted_pairing"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_PIN: "1234"}
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "10.20.43.21"
+    assert result["data"][CONF_HOST] == "10.20.43.21"
+    assert result["data"][CONF_METHOD] == METHOD_ENCRYPTED_WEBSOCKET
+    assert result["data"][CONF_MODEL] is None
+    assert result["data"][CONF_PORT] == 8000
+    assert result["data"][CONF_TOKEN] == "037739871315caef138547b03e348b72"
+    assert result["data"][CONF_SESSION_ID] == "1"
+    assert result["result"].unique_id is None
 
 
 @pytest.mark.usefixtures("rest_api", "remote_encrypted_websocket")
@@ -434,7 +475,7 @@ async def test_user_websocket_k_series_encrypted_also_cannot_connect(
     assert result2["reason"] == RESULT_CANNOT_CONNECT
 
 
-@pytest.mark.usefixtures("rest_api_failing")
+@pytest.mark.usefixtures("rest_api_failing", "remote_encrypted_websocket_failing")
 async def test_user_legacy_missing_auth(hass: HomeAssistant) -> None:
     """Test starting a flow by user with authentication."""
     result = await hass.config_entries.flow.async_init(
@@ -469,7 +510,7 @@ async def test_user_legacy_missing_auth(hass: HomeAssistant) -> None:
         assert result2["reason"] == RESULT_CANNOT_CONNECT
 
 
-@pytest.mark.usefixtures("rest_api_failing")
+@pytest.mark.usefixtures("rest_api_failing", "remote_encrypted_websocket_failing")
 async def test_user_legacy_not_supported(hass: HomeAssistant) -> None:
     """Test starting a flow by user for not supported device."""
     result = await hass.config_entries.flow.async_init(
@@ -598,7 +639,7 @@ async def test_user_websocket_auth_retry(hass: HomeAssistant) -> None:
     assert result["result"].unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
 
 
-@pytest.mark.usefixtures("rest_api_failing")
+@pytest.mark.usefixtures("rest_api_failing", "remote_encrypted_websocket_failing")
 async def test_user_not_successful(hass: HomeAssistant) -> None:
     """Test starting a flow by user but no connection found."""
     result = await hass.config_entries.flow.async_init(
@@ -625,7 +666,7 @@ async def test_user_not_successful(hass: HomeAssistant) -> None:
         assert result["reason"] == RESULT_CANNOT_CONNECT
 
 
-@pytest.mark.usefixtures("rest_api_failing")
+@pytest.mark.usefixtures("rest_api_failing", "remote_encrypted_websocket_failing")
 async def test_user_not_successful_2(hass: HomeAssistant) -> None:
     """Test starting a flow by user but no connection found."""
     result = await hass.config_entries.flow.async_init(
@@ -652,7 +693,9 @@ async def test_user_not_successful_2(hass: HomeAssistant) -> None:
         assert result["reason"] == RESULT_CANNOT_CONNECT
 
 
-@pytest.mark.usefixtures("remote_legacy", "rest_api_failing")
+@pytest.mark.usefixtures(
+    "remote_legacy", "rest_api_failing", "remote_encrypted_websocket_failing"
+)
 async def test_ssdp(hass: HomeAssistant) -> None:
     """Test starting a flow from discovery."""
     # confirm to add the entry
@@ -693,7 +736,9 @@ async def test_ssdp_no_manufacturer(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     "data", [MOCK_SSDP_DATA_MAIN_TV_AGENT_ST, MOCK_SSDP_DATA_RENDERING_CONTROL_ST]
 )
-@pytest.mark.usefixtures("remote_legacy", "rest_api_failing")
+@pytest.mark.usefixtures(
+    "remote_legacy", "rest_api_failing", "remote_encrypted_websocket_failing"
+)
 async def test_ssdp_legacy_not_remote_control_receiver_udn(
     hass: HomeAssistant, data: SsdpServiceInfo
 ) -> None:
@@ -705,7 +750,9 @@ async def test_ssdp_legacy_not_remote_control_receiver_udn(
     assert result["reason"] == RESULT_NOT_SUPPORTED
 
 
-@pytest.mark.usefixtures("remote_legacy", "rest_api_failing")
+@pytest.mark.usefixtures(
+    "remote_legacy", "rest_api_failing", "remote_encrypted_websocket_failing"
+)
 async def test_ssdp_noprefix(hass: HomeAssistant) -> None:
     """Test discovery flow when friendly name has no [TV] prefix."""
     ssdp_data = deepcopy(MOCK_SSDP_DATA)
@@ -734,7 +781,9 @@ async def test_ssdp_noprefix(hass: HomeAssistant) -> None:
     assert result["result"].unique_id == "068e7781-006e-1000-bbbf-84a4668d8423"
 
 
-@pytest.mark.usefixtures("remote_websocket", "rest_api_failing")
+@pytest.mark.usefixtures(
+    "remote_websocket", "rest_api_failing", "remote_encrypted_websocket_failing"
+)
 async def test_ssdp_legacy_missing_auth(hass: HomeAssistant) -> None:
     """Test starting a flow from discovery with authentication."""
     with patch(
@@ -772,7 +821,9 @@ async def test_ssdp_legacy_missing_auth(hass: HomeAssistant) -> None:
     assert result["result"].unique_id == "068e7781-006e-1000-bbbf-84a4668d8423"
 
 
-@pytest.mark.usefixtures("remote_websocket", "rest_api_failing")
+@pytest.mark.usefixtures(
+    "remote_websocket", "rest_api_failing", "remote_encrypted_websocket_failing"
+)
 async def test_ssdp_legacy_not_supported(hass: HomeAssistant) -> None:
     """Test starting a flow from discovery for not supported device."""
     with patch(
@@ -921,6 +972,46 @@ async def test_ssdp_encrypted_websocket_not_supported(
         )
         assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == RESULT_NOT_SUPPORTED
+
+
+@pytest.mark.usefixtures("remote_encrypted_websocket", "rest_api_failing")
+async def test_ssdp_encrypted_websocket_without_rest_api(
+    hass: HomeAssistant,
+) -> None:
+    """Test an H/J model without the REST api discovered via ssdp pairs via the encrypted port."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_SSDP},
+        data=MOCK_SSDP_DATA_RENDERING_CONTROL_ST,
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "confirm"
+
+    with patch(
+        "homeassistant.components.samsungtv.config_flow.SamsungTVEncryptedWSAsyncAuthenticator",
+        autospec=True,
+    ) as authenticator_mock:
+        authenticator_mock.return_value.try_pin.return_value = (
+            "037739871315caef138547b03e348b72"
+        )
+        authenticator_mock.return_value.get_session_id_and_close.return_value = "1"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
+        assert result["step_id"] == "encrypted_pairing"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_PIN: "1234"}
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "UE55H6400"
+    assert result["data"][CONF_HOST] == "10.10.12.34"
+    assert result["data"][CONF_METHOD] == METHOD_ENCRYPTED_WEBSOCKET
+    assert result["data"][CONF_MODEL] == "UE55H6400"
+    assert result["data"][CONF_PORT] == 8000
+    assert result["result"].unique_id == "09896802-00a0-1000-adfd-84a4668d8423"
 
 
 @pytest.mark.usefixtures("rest_api_failing")
@@ -1443,7 +1534,7 @@ async def test_websocket_no_mac(hass: HomeAssistant) -> None:
     assert entries[0].data[CONF_MAC] is None
 
 
-@pytest.mark.usefixtures("rest_api_failing")
+@pytest.mark.usefixtures("rest_api_failing", "remote_encrypted_websocket_failing")
 async def test_autodetect_auth_missing(hass: HomeAssistant) -> None:
     """Test for send key with autodetection of protocol."""
     result = await hass.config_entries.flow.async_init(
@@ -1484,7 +1575,7 @@ async def test_autodetect_auth_missing(hass: HomeAssistant) -> None:
         assert result2["reason"] == RESULT_CANNOT_CONNECT
 
 
-@pytest.mark.usefixtures("rest_api_failing")
+@pytest.mark.usefixtures("rest_api_failing", "remote_encrypted_websocket_failing")
 async def test_autodetect_not_supported(hass: HomeAssistant) -> None:
     """Test for send key with autodetection of protocol."""
     result = await hass.config_entries.flow.async_init(
@@ -1508,7 +1599,9 @@ async def test_autodetect_not_supported(hass: HomeAssistant) -> None:
         assert remote.call_args_list == [AUTODETECT_LEGACY]
 
 
-@pytest.mark.usefixtures("remote_legacy", "rest_api_failing")
+@pytest.mark.usefixtures(
+    "remote_legacy", "rest_api_failing", "remote_encrypted_websocket_failing"
+)
 async def test_autodetect_legacy(hass: HomeAssistant) -> None:
     """Test for send key with autodetection of protocol."""
     result = await hass.config_entries.flow.async_init(
@@ -1528,6 +1621,7 @@ async def test_autodetect_legacy(hass: HomeAssistant) -> None:
     assert result["data"][CONF_PORT] == LEGACY_PORT
 
 
+@pytest.mark.usefixtures("remote_encrypted_websocket_failing")
 async def test_autodetect_none(hass: HomeAssistant) -> None:
     """Test for send key with autodetection of protocol."""
     result = await hass.config_entries.flow.async_init(
@@ -1670,7 +1764,9 @@ async def test_update_missing_mac_unique_id_added_from_zeroconf(
     assert entry.unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
 
 
-@pytest.mark.usefixtures("remote_legacy", "rest_api_failing")
+@pytest.mark.usefixtures(
+    "remote_legacy", "rest_api_failing", "remote_encrypted_websocket_failing"
+)
 async def test_update_missing_model_added_from_ssdp(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:

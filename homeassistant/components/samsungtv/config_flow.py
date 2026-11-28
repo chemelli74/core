@@ -274,8 +274,8 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
             if await self._async_set_name_host_from_input(user_input):
                 await self._async_create_bridge()
                 self._async_abort_entries_match({CONF_HOST: self._host})
-                if self._bridge.method != METHOD_LEGACY:
-                    # Legacy bridge does not provide device info
+                if self._device_info:
+                    # Legacy and some encrypted bridges do not provide device info
                     await self._async_set_device_unique_id(raise_on_progress=False)
                 if self._bridge.method == METHOD_ENCRYPTED_WEBSOCKET:
                     return await self.async_step_encrypted_pairing()

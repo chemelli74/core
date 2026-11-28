@@ -140,6 +140,18 @@ async def async_get_device_info(
                     )
             return RESULT_SUCCESS, port, METHOD_WEBSOCKET, info
 
+    # Some H/J models (e.g. UE55H6400) only expose the REST api on /ms/1.0/
+    encrypted_bridge = SamsungTVEncryptedBridge(
+        hass, METHOD_ENCRYPTED_WEBSOCKET, host, ENCRYPTED_WEBSOCKET_PORT
+    )
+    if await encrypted_bridge.async_try_connect() == RESULT_SUCCESS:
+        return (
+            RESULT_SUCCESS,
+            ENCRYPTED_WEBSOCKET_PORT,
+            METHOD_ENCRYPTED_WEBSOCKET,
+            None,
+        )
+
     # Try legacy port
     bridge = SamsungTVBridge.get_bridge(hass, METHOD_LEGACY, host, LEGACY_PORT)
     result = await bridge.async_try_connect()
